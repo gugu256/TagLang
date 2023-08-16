@@ -2,6 +2,7 @@ import sys
 
 TT_PRINT = ["<print>", "<PRINT>"]
 TT_ENDPRINT = ["</print>", "</PRINT>"]
+TT_NEWLINE = ["<nl>", "<br>"]
 TT_STRING = ["<string>", "<STRING>"]
 TT_ENDSTRING = ["</string>", "</STRING>"]
 TT_NUM = ["<num>", "<NUM>"]
@@ -14,7 +15,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return f"{self.type}:\"{self.value}\"" if self.type == "STRING" else f"{self.type}:{self.value}"
+        return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else f"{self.type}:{self.value}"
 
 def lex(filecontent, debug):
     tok = ""
@@ -36,6 +37,9 @@ def lex(filecontent, debug):
             tok = ""
         elif tok in TT_ENDPRINT:
             tokens.append(Token("ENDPRINT", None))
+            tok = ""
+        elif tok in TT_NEWLINE:
+            tokens.append(Token("NEWLINE", "\n"))
             tok = ""
         elif tok in TT_ENDSTRING:
             tokens.append(Token("STRING", string))
@@ -81,11 +85,23 @@ def lex(filecontent, debug):
     return tokens
 
 def interpret(tokens):
-    pass
+    inprint = False
+    for i in range(0, len(tokens)):
+        if inprint:
+                
+            if tokens[i].type == "ENDPRINT":
+                inprint = False
+            else:
+                print(tokens[i].value, end="")
+        else:    
+            if tokens[i].type == "PRINT":
+                inprint = True
 
 
 def run():
     codefile = open(sys.argv[1]).read()
-    print(lex(codefile, debug=True))
+    toks = lex(codefile, debug=False)
+    print(toks)
+    interpret(toks)
 
 run()
