@@ -7,7 +7,17 @@ TT_STRING = ["<string>", "<STRING>"]
 TT_ENDSTRING = ["</string>", "</STRING>"]
 TT_NUM = ["<num>", "<NUM>"]
 TT_ENDNUM = ["</num>", "</NUM>"]
+TT_LET = ["<let>", "<LET>"]
+TT_ENDLET = ["</let>", "</LET>"]
+TT_NAME = ["<name>", "<NAME>"]
+TT_ENDNAME = ["</name>", "</NAME>"]
+TT_VAR = ["<var>", "<VAR>"]
+TT_ENDVAR = ["</var>", "</VAR>"]
+TT_GETVARS = ["<getvars>", "<GETVARS>"]
 
+variables = {
+    "_VERSION": 0.0
+}
 
 class Token:
     def __init__(self, type: str, value: any):
@@ -25,11 +35,13 @@ def lex(filecontent, debug):
     string = ""
     number = ""
     innum = False
+    varname = ""
+    inname = False
 
     for char in filecontent:
         tok += char
         print(tok) if debug == True else print(end="")
-        if tok in " \t\n" and instring == False and innum == False:
+        if tok in " \t\n" and instring == False and inname == False:
             tok = ""
 
         if tok in TT_PRINT:
@@ -40,6 +52,15 @@ def lex(filecontent, debug):
             tok = ""
         elif tok in TT_NEWLINE:
             tokens.append(Token("NEWLINE", "\n"))
+            tok = ""
+        elif tok in TT_GETVARS:
+            tokens.append(Token("GETVARS", None))
+            tok = ""
+        elif tok in TT_LET:
+            tokens.append(Token("LET", None))
+            tok = ""
+        elif tok in TT_ENDLET:
+            tokens.append(Token("ENDLET", None))
             tok = ""
         elif tok in TT_ENDSTRING:
             tokens.append(Token("STRING", string))
@@ -62,6 +83,7 @@ def lex(filecontent, debug):
                 tok = ""
             else:
                 tok = ""
+
         elif tok in TT_NUM:
             if innum != True:
                 innum = True
@@ -80,27 +102,68 @@ def lex(filecontent, debug):
             else:
                 tok = ""
 
+        elif tok in TT_ENDNAME:
+            tokens.append(Token("VARNAME", varname))
+            varname = ""
+            tok = ""
+        elif tok in TT_NAME:
+            if inname != True:
+                inname = True
+                tok = ""
+            elif inname:
+                varname += tok
+                tok = ""
+        elif inname:
+            varname += tok
+            if varname[-7:] in TT_ENDNAME:
+                inname = False
+                varname = varname[:-7]
+                tokens.append(Token("VARNAME", varname))
+                varname = ""
+                tok = ""
+            else:
+                tok = ""
+
         pos += 1
 
     return tokens
 
 def interpret(tokens):
     inprint = False
+    inlet = False
+    current_var = ""
+    current_value = None
     for i in range(0, len(tokens)):
+        
+
         if inprint:
                 
             if tokens[i].type == "ENDPRINT":
                 inprint = False
             else:
                 print(tokens[i].value, end="")
+        elif inlet:
+            if tokens[i].type == "ENDLET":
+                variables[current_var] = current_value
+                current_var = ""
+                current_value = 0
+                inlet = False
+            elif tokens[i].type == "VARNAME":
+                current_var = tokens[i].value
+            else:
+                current_value = tokens[i].value
         else:    
             if tokens[i].type == "PRINT":
                 inprint = True
+            elif tokens[i].type == "LET":
+                inlet = True
+            elif tokens[i].type == "GETVARS":
+                print(variables)
 
 
 def run():
     codefile = open(sys.argv[1]).read()
-    toks = lex(codefile, debug=False)
+    toks = lex(codefile, debug=True)
     print(toks)
     interpret(toks)
 
