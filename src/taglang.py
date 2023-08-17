@@ -19,6 +19,8 @@ TT_GETVARS =      ["<getvars>", "<GETVARS>"]
 TT_CLEAR =        ["<clear>", "<CLEAR>"]
 TT_COMMENT =      ["<comment>", "<COMMENT>"]
 TT_ENDCOMMENT =   ["</comment>", "</COMMENT>"]
+TT_INPUT =        ["<input>", "<INPUT>"]
+TT_ENDINPUT =        ["</input>", "</INPUT>"]
 
 variables = {
     "_VERSION": 0.0
@@ -77,6 +79,13 @@ def lex(filecontent, show_tokens, show_token):
         elif tok in TT_ENDLET:
             tokens.append(Token("ENDLET", None))
             tok = ""
+        elif tok in TT_INPUT:
+            tokens.append(Token("INPUT", None))
+            tok = ""
+        elif tok in TT_ENDINPUT:
+            tokens.append(Token("ENDINPUT", None))
+            tok = ""
+
         elif tok in TT_ENDSTRING:
             tokens.append(Token("STRING", string))
             string = ""
@@ -189,28 +198,29 @@ def lex(filecontent, show_tokens, show_token):
 
     return tokens
 
-def interpret(tokens):
-    inprint = False
-    inlet = False
-    current_var = ""
-    current_value = None
+def interpret(tokens):          # The place where tokens are interpreted
+    inprint = False             # Indicates if we are printing stuff 
+    inlet = False               # Indicates if we are defining variables 
+    current_var = ""            # The name of the variable we're defining
+    current_value = None        # The value of the variable we're defining
+    pos = 0                     # The position in an input statment (var name or arguments)
+    ininp = False               # Indicates if we are asking ofr input
+
     for i in range(0, len(tokens)):
-        
-        if tokens[i].type == "VAR":
+
+        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT": # Replaces variable tokens by their value
             varname = tokens[i].value
             tokens[i].value = getvar(varname)
             del varname
-            #i -= 1
 
-        if inprint:
+        if inprint: # Printing
                 
             if tokens[i].type == "ENDPRINT":
                 inprint = False
-            #elif tokens[i].type == "VAR":
-            #    print(getvar(tokens[i].value), end="")
             else:
                 print(tokens[i].value, end="")
-        elif inlet:
+
+        elif inlet: # Defining
             if tokens[i].type == "ENDLET":
                 variables[current_var] = current_value
                 current_var = ""
@@ -223,6 +233,21 @@ def interpret(tokens):
                 current_var = tokens[i].value
             else:
                 current_value = tokens[i].value
+        
+        elif ininp:
+            if tokens[i].type == "ENDINPUT":
+                variables[current_var] = input("")
+                pos = 0
+                ininp = False
+                current_var = ""
+            elif tokens[i].type == "VARNAME" and pos == 0 or tokens[i].type == "VAR" and pos == 0:
+                current_var = tokens[i].value
+            else:
+                print(tokens[i].value, end="")
+
+            pos += 1
+
+
         else:    
             if tokens[i].type == "PRINT":
                 inprint = True
@@ -234,6 +259,8 @@ def interpret(tokens):
                 os.system("cls" if os.name == 'nt' else "clear")
             elif tokens[i].type == "COMMENT":
                 pass
+            elif tokens[i].type == "INPUT":
+                ininp = True
 
 def run():
     codefile = open(sys.argv[1]).read()
