@@ -3,6 +3,7 @@
     <name>my-string</name> <string>Hi</string>
 </let>
 <print>
-<var>my-number</var>
-<var>my-string</var>
+    <var>my-number</var>
+    <string> </string>
+    <var>my-string</var>
 </print>

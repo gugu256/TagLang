@@ -1,10 +1,11 @@
 import sys
+import os
 
 TT_PRINT = ["<print>", "<PRINT>"]
 TT_ENDPRINT = ["</print>", "</PRINT>"]
 TT_NEWLINE = ["<nl>", "<br>"]
-TT_STRING = ["<string>", "<STRING>"]
-TT_ENDSTRING = ["</string>", "</STRING>"]
+TT_STRING = ["<string>", "<str>" , "<STR>", "<STRING>"]
+TT_ENDSTRING = ["</string>", "</str>" , "</STR>",  "</STRING>"]
 TT_NUM = ["<num>", "<NUM>"]
 TT_ENDNUM = ["</num>", "</NUM>"]
 TT_LET = ["<let>", "<LET>"]
@@ -14,10 +15,15 @@ TT_ENDNAME = ["</name>", "</NAME>"]
 TT_VAR = ["<var>", "<VAR>"]
 TT_ENDVAR = ["</var>", "</VAR>"]
 TT_GETVARS = ["<getvars>", "<GETVARS>"]
+TT_CLEAR = ["<clear>", "<CLEAR>"]
+TT_COMMENT = ["<comment>" "<COMMENT>"]
 
 variables = {
     "_VERSION": 0.0
 }
+
+def getvar(var):
+    return variables[var]
 
 class Token:
     def __init__(self, type: str, value: any):
@@ -60,6 +66,9 @@ def lex(filecontent, debug):
             tok = ""
         elif tok in TT_LET:
             tokens.append(Token("LET", None))
+            tok = ""
+        elif tok in TT_CLEAR:
+            tokens.append(Token("CLEAR", None))
             tok = ""
         elif tok in TT_ENDLET:
             tokens.append(Token("ENDLET", None))
@@ -159,14 +168,18 @@ def interpret(tokens):
     current_value = None
     for i in range(0, len(tokens)):
         
-        #if tokens[i].type = ""
+        if tokens[i].type == "VAR":
+            varname = tokens[i].value
+            tokens[i].value = getvar(varname)
+            del varname
+            #i -= 1
 
         if inprint:
                 
             if tokens[i].type == "ENDPRINT":
                 inprint = False
-            elif tokens[i].type == "VAR":
-                print(variables[tokens[i].value], end="")
+            #elif tokens[i].type == "VAR":
+            #    print(getvar(tokens[i].value), end="")
             else:
                 print(tokens[i].value, end="")
         elif inlet:
@@ -189,7 +202,8 @@ def interpret(tokens):
                 inlet = True
             elif tokens[i].type == "GETVARS":
                 print(variables)
-
+            elif tokens[i].type == "CLEAR":
+                os.system("cls" if os.name == 'nt' else "clear")
 
 def run():
     codefile = open(sys.argv[1]).read()
