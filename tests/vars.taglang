@@ -2,4 +2,7 @@
     <name>my-number</name> <num>13</num>
     <name>my-string</name> <string>Hi</string>
 </let>
-<getvars>
+<print>
+<var>my-number</var>
+<var>my-string</var>
+</print>

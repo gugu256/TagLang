@@ -37,6 +37,8 @@ def lex(filecontent, debug):
     innum = False
     varname = ""
     inname = False
+    variable = ""
+    invar = False
 
     for char in filecontent:
         tok += char
@@ -123,6 +125,28 @@ def lex(filecontent, debug):
                 tok = ""
             else:
                 tok = ""
+        
+        elif tok in TT_ENDVAR:
+            tokens.append(Token("VAR", variable))
+            variable = ""
+            tok = ""
+        elif tok in TT_VAR:
+            if invar != True:
+                invar = True
+                tok = ""
+            elif invar:
+                variable += tok
+                tok = ""
+        elif invar:
+            variable += tok
+            if variable[-6:] in TT_ENDVAR:
+                invar = False
+                variable = variable[:-6]
+                tokens.append(Token("VAR", variable))
+                variable = ""
+                tok = ""
+            else:
+                tok = ""
 
         pos += 1
 
@@ -135,11 +159,14 @@ def interpret(tokens):
     current_value = None
     for i in range(0, len(tokens)):
         
+        #if tokens[i].type = ""
 
         if inprint:
                 
             if tokens[i].type == "ENDPRINT":
                 inprint = False
+            elif tokens[i].type == "VAR":
+                print(variables[tokens[i].value], end="")
             else:
                 print(tokens[i].value, end="")
         elif inlet:
@@ -166,7 +193,7 @@ def interpret(tokens):
 
 def run():
     codefile = open(sys.argv[1]).read()
-    toks = lex(codefile, debug=True)
+    toks = lex(codefile, debug=False)
     print(toks)
     interpret(toks)
 
