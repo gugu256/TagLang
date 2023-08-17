@@ -1,0 +1,4 @@
+<comment>This is a taglang comment</comment>
+
+<comment>And this is a Hello World program :</comment>
+<print><string>Hello, World!</string></print>

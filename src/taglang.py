@@ -1,22 +1,24 @@
 import sys
 import os
 
-TT_PRINT = ["<print>", "<PRINT>"]
-TT_ENDPRINT = ["</print>", "</PRINT>"]
-TT_NEWLINE = ["<nl>", "<br>"]
-TT_STRING = ["<string>", "<str>" , "<STR>", "<STRING>"]
-TT_ENDSTRING = ["</string>", "</str>" , "</STR>",  "</STRING>"]
-TT_NUM = ["<num>", "<NUM>"]
-TT_ENDNUM = ["</num>", "</NUM>"]
-TT_LET = ["<let>", "<LET>"]
-TT_ENDLET = ["</let>", "</LET>"]
-TT_NAME = ["<name>", "<NAME>"]
-TT_ENDNAME = ["</name>", "</NAME>"]
-TT_VAR = ["<var>", "<VAR>"]
-TT_ENDVAR = ["</var>", "</VAR>"]
-TT_GETVARS = ["<getvars>", "<GETVARS>"]
-TT_CLEAR = ["<clear>", "<CLEAR>"]
-TT_COMMENT = ["<comment>" "<COMMENT>"]
+
+TT_PRINT =        ["<print>", "<PRINT>"]
+TT_ENDPRINT =     ["</print>", "</PRINT>"]
+TT_NEWLINE =      ["<nl>", "<br>"]
+TT_STRING =       ["<string>", "<STRING>"]
+TT_ENDSTRING =    ["</string>", "</STRING>"]
+TT_NUM =          ["<num>", "<NUM>"]
+TT_ENDNUM =       ["</num>", "</NUM>"]
+TT_LET =          ["<let>", "<LET>"]
+TT_ENDLET =       ["</let>", "</LET>"]
+TT_NAME =         ["<name>", "<NAME>"]
+TT_ENDNAME =      ["</name>", "</NAME>"]
+TT_VAR =          ["<var>", "<VAR>"]
+TT_ENDVAR =       ["</var>", "</VAR>"]
+TT_GETVARS =      ["<getvars>", "<GETVARS>"]
+TT_CLEAR =        ["<clear>", "<CLEAR>"]
+TT_COMMENT =      ["<comment>", "<COMMENT>"]
+TT_ENDCOMMENT =   ["</comment>", "</COMMENT>"]
 
 variables = {
     "_VERSION": 0.0
@@ -33,23 +35,25 @@ class Token:
     def __repr__(self):
         return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else f"{self.type}:{self.value}"
 
-def lex(filecontent, debug):
+def lex(filecontent, show_tokens, show_token):
     tok = ""
     pos = 0
     tokens = []
     instring = False
     string = ""
-    number = ""
     innum = False
-    varname = ""
+    number = ""
     inname = False
-    variable = ""
+    varname = ""
     invar = False
+    variable = ""
+    incomment = False
+    comment = ""
 
     for char in filecontent:
         tok += char
-        print(tok) if debug == True else print(end="")
-        if tok in " \t\n" and instring == False and inname == False:
+        print(tok) if show_token == True else print(end="")
+        if tok in " \t\n" and instring == False and incomment == False:
             tok = ""
 
         if tok in TT_PRINT:
@@ -156,8 +160,32 @@ def lex(filecontent, debug):
                 tok = ""
             else:
                 tok = ""
+        
+        elif tok in TT_ENDCOMMENT:
+            tokens.append(Token("COMMENT", comment))
+            comment = ""
+            tok = ""
+        elif tok in TT_COMMENT or tok == "<comment>":
+            if incomment != True:
+                incomment = True
+                tok = ""
+            elif incomment:
+                comment += tok
+                tok = ""
+        elif incomment:
+            comment += tok
+            if comment[-10:] in TT_ENDCOMMENT:
+                incomment = False
+                comment = comment[:-10]
+                tokens.append(Token("COMMENT", comment))
+                comment = ""
+                tok = ""
+            else:
+                tok = ""
 
         pos += 1
+    
+    print(tokens) if show_tokens == True else print(end="")
 
     return tokens
 
@@ -204,11 +232,13 @@ def interpret(tokens):
                 print(variables)
             elif tokens[i].type == "CLEAR":
                 os.system("cls" if os.name == 'nt' else "clear")
+            elif tokens[i].type == "COMMENT":
+                pass
 
 def run():
     codefile = open(sys.argv[1]).read()
-    toks = lex(codefile, debug=False)
-    print(toks)
+    toks = lex(codefile, show_token=False, show_tokens=True)
+    
     interpret(toks)
 
 run()
