@@ -149,6 +149,9 @@ def interpret(tokens):
                 current_value = 0
                 inlet = False
             elif tokens[i].type == "VARNAME":
+                if current_value != None:
+                    variables[current_var] = current_value
+                    current_value = None
                 current_var = tokens[i].value
             else:
                 current_value = tokens[i].value
