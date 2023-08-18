@@ -1,2 +1,2 @@
 <input><var>name</var> <string>Enter your name : </string> </input>
-<print><string>Hello, </string> <var>name</var></print>
+<input><var>fullname</var> <string>Enter your full name, </string> <var>name</var> <string> : </string></input>

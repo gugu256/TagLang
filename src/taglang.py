@@ -20,7 +20,7 @@ TT_CLEAR =        ["<clear>", "<CLEAR>"]
 TT_COMMENT =      ["<comment>", "<COMMENT>"]
 TT_ENDCOMMENT =   ["</comment>", "</COMMENT>"]
 TT_INPUT =        ["<input>", "<INPUT>"]
-TT_ENDINPUT =        ["</input>", "</INPUT>"]
+TT_ENDINPUT =     ["</input>", "</INPUT>"]
 
 variables = {
     "_VERSION": 0.0
@@ -242,10 +242,10 @@ def interpret(tokens):          # The place where tokens are interpreted
                 current_var = ""
             elif tokens[i].type == "VARNAME" and pos == 0 or tokens[i].type == "VAR" and pos == 0:
                 current_var = tokens[i].value
+                pos += 1
             else:
                 print(tokens[i].value, end="")
-
-            pos += 1
+                pos += 1
 
 
         else:    
