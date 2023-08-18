@@ -29,6 +29,10 @@ TT_TONUM =        ["<tonum>", "<TONUM>"]
 TT_ENDTONUM =     ["</tonum>", "</TONUM>"]
 TT_TOSTRING =     ["<tostring>", "<TOSTRING>"]
 TT_ENDTOSTRING =  ["</tostring>", "</TOSTRING>"]
+TT_EXPR =         ["<expr>", "<EXPR>"]
+TT_ENDEXPR =      ["</expr>", "</EXPR>"]
+TT_PY =           ["<py>", "<PY>"]
+TT_ENDPY =        ["</py>", "</PY>"]
 
 variables = {
     "_VERSION": 0.0
@@ -43,7 +47,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else f"{self.type}:{self.value}"
+        return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else f"{self.type}:({self.value})" if self.type == "EXPR" else f"{self.type}:{self.value}"
 
 def lex(filecontent, show_tokens, show_token):
     tok = ""
@@ -59,11 +63,15 @@ def lex(filecontent, show_tokens, show_token):
     variable = ""
     incomment = False
     comment = ""
+    inexpr = False
+    expr = ""
+    inpy = False
+    pythoncode = ""
 
     for char in filecontent:
         tok += char
         print(tok) if show_token == True else print(end="")
-        if tok in " \t\n" and instring == False and incomment == False:
+        if tok in " \t\n" and instring == False and incomment == False and inexpr == False:
             tok = ""
 
         if tok in TT_PRINT:
@@ -223,6 +231,51 @@ def lex(filecontent, show_tokens, show_token):
                 tok = ""
             else:
                 tok = ""
+        
+        elif tok in TT_ENDEXPR:
+            tokens.append(Token("EXPR", expr))
+            expr = ""
+            tok = ""
+        elif tok in TT_EXPR:
+            if inexpr != True:
+                inexpr = True
+                tok = ""
+            elif inexpr:
+                expr += tok
+                tok = ""
+        elif inexpr:
+            expr += tok
+            if expr[-7:] in TT_ENDEXPR:
+                inexpr = False
+                expr = expr[:-7]
+                expr = expr.replace("<var>", 'variables["').replace("</var>", '"]').replace("<VAR>", 'variables["').replace("</VAR>", '"]')
+                tokens.append(Token("EXPR", expr))
+                expr = ""
+                tok = ""
+            else:
+                tok = ""
+        
+        elif tok in TT_ENDCOMMENT:
+            tokens.append(Token("COMMENT", comment))
+            comment = ""
+            tok = ""
+        elif tok in TT_COMMENT or tok == "<comment>":
+            if incomment != True:
+                incomment = True
+                tok = ""
+            elif incomment:
+                comment += tok
+                tok = ""
+        elif incomment:
+            comment += tok
+            if comment[-10:] in TT_ENDCOMMENT:
+                incomment = False
+                comment = comment[:-10]
+                tokens.append(Token("COMMENT", comment))
+                comment = ""
+                tok = ""
+            else:
+                tok = ""
 
         pos += 1
     
@@ -254,6 +307,11 @@ def interpret(tokens):          # The place where tokens are interpreted
                 varname = tokens[i].value
                 tokens[i].value = getvar(varname)
                 del varname
+        
+        if tokens[i].type == "EXPR":
+            expr = tokens[i].value
+            tokens[i].value = eval(expr)
+            del expr
 
         if inprint: # Printing
                 
