@@ -21,6 +21,10 @@ TT_COMMENT =      ["<comment>", "<COMMENT>"]
 TT_ENDCOMMENT =   ["</comment>", "</COMMENT>"]
 TT_INPUT =        ["<input>", "<INPUT>"]
 TT_ENDINPUT =     ["</input>", "</INPUT>"]
+TT_NEXT =         ["<next>", "<NEXT>"]
+TT_ENDNEXT =      ["</next>", "</NEXT>"]
+TT_PREV =         ["<prev>", "<PREV>"]
+TT_ENDPREV =      ["</prev>", "</PREV>"]
 
 variables = {
     "_VERSION": 0.0
@@ -66,6 +70,18 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_NEWLINE:
             tokens.append(Token("NEWLINE", "\n"))
+            tok = ""
+        elif tok in TT_NEXT:
+            tokens.append(Token("NEXT", None))
+            tok = ""
+        elif tok in TT_ENDNEXT:
+            tokens.append(Token("ENDNEXT", None))
+            tok = ""
+        elif tok in TT_PREV:
+            tokens.append(Token("PREV", None))
+            tok = ""
+        elif tok in TT_ENDPREV:
+            tokens.append(Token("ENDPREV", None))
             tok = ""
         elif tok in TT_GETVARS:
             tokens.append(Token("GETVARS", None))
@@ -205,10 +221,12 @@ def interpret(tokens):          # The place where tokens are interpreted
     current_value = None        # The value of the variable we're defining
     pos = 0                     # The position in an input statment (var name or arguments)
     ininp = False               # Indicates if we are asking ofr input
+    innext = False              # Indicates if we are incrementing a value
+    inprev = False              # Indicates if we are decrementing a value
 
     for i in range(0, len(tokens)):
 
-        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT": # Replaces variable tokens by their value
+        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV": # Replaces variable tokens by their value
             varname = tokens[i].value
             tokens[i].value = getvar(varname)
             del varname
@@ -246,6 +264,22 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 print(tokens[i].value, end="")
                 pos += 1
+        
+        elif innext:
+            if tokens[i].type == "ENDNEXT":
+                variables[current_var] += 1
+                current_var = ""
+                innext = False
+            else:
+                current_var = tokens[i].value
+        
+        elif inprev:
+            if tokens[i].type == "ENDPREV":
+                variables[current_var] -= 1
+                current_var = ""
+                inprev = False
+            else:
+                current_var = tokens[i].value
 
 
         else:    
@@ -261,6 +295,10 @@ def interpret(tokens):          # The place where tokens are interpreted
                 pass
             elif tokens[i].type == "INPUT":
                 ininp = True
+            elif tokens[i].type == "NEXT":
+                innext = True
+            elif tokens[i].type == "PREV":
+                inprev = True
 
 def run():
     codefile = open(sys.argv[1]).read()

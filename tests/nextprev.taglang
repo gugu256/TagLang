@@ -1,0 +1,17 @@
+<let>
+    <name>age</name> <num>13</num>
+    <name>years-untill-graduation</name> <num>5</num>
+</let>
+
+<print>
+    <string>Happy Birthday!</string>
+    <nl>
+</print>
+
+<next><var>age</var></next>
+<prev><var>years-untill-graduation</var></prev>
+
+<print>
+    <string>You are </string> <var>age</var> <string> years old</string> <nl>
+    <string>You will graduate high school in </string> <var>years-untill-graduation</var> <string> years</string> <nl>
+</print>
