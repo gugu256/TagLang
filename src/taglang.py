@@ -25,6 +25,10 @@ TT_NEXT =         ["<next>", "<NEXT>"]
 TT_ENDNEXT =      ["</next>", "</NEXT>"]
 TT_PREV =         ["<prev>", "<PREV>"]
 TT_ENDPREV =      ["</prev>", "</PREV>"]
+TT_TONUM =        ["<tonum>", "<TONUM>"]
+TT_ENDTONUM =     ["</tonum>", "</TONUM>"]
+TT_TOSTRING =     ["<tostring>", "<TOSTRING>"]
+TT_ENDTOSTRING =  ["</tostring>", "</TOSTRING>"]
 
 variables = {
     "_VERSION": 0.0
@@ -82,6 +86,18 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_ENDPREV:
             tokens.append(Token("ENDPREV", None))
+            tok = ""
+        elif tok in TT_TONUM:
+            tokens.append(Token("TONUM", None))
+            tok = ""
+        elif tok in TT_ENDTONUM:
+            tokens.append(Token("ENDTONUM", None))
+            tok = ""
+        elif tok in TT_TOSTRING:
+            tokens.append(Token("TOSTRING", None))
+            tok = ""
+        elif tok in TT_ENDTOSTRING:
+            tokens.append(Token("ENDTOSTRING", None))
             tok = ""
         elif tok in TT_GETVARS:
             tokens.append(Token("GETVARS", None))
@@ -223,13 +239,21 @@ def interpret(tokens):          # The place where tokens are interpreted
     ininp = False               # Indicates if we are asking ofr input
     innext = False              # Indicates if we are incrementing a value
     inprev = False              # Indicates if we are decrementing a value
+    innumconversion = False     # Indicates if we are converting somehting to a NUM
+    instringconversion = False  # Indictaes iof we are converting something to a STRING
+    target_var = ""             # The var the conversion will be stored in 
 
     for i in range(0, len(tokens)):
 
-        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV": # Replaces variable tokens by their value
-            varname = tokens[i].value
-            tokens[i].value = getvar(varname)
-            del varname
+        # Little explanation for the two next lines, 
+        # The first line makes sure that a variable is not replaced by its value in functions that have the first arg as a variable (example : In INPUT, the first argument has to be a variable, but the next arguments for the prompt might be variables' values)
+        # The second line makes sure that a variable is not replaced by its value in functions where every variable is an arg (example: in TONUM, every variiable is an argument, and none of their values are used)
+                                  
+        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV" and tokens[i-1].type != "TONUM" and tokens[i-1].type != "TOSTRING": # Replaces variable tokens by their value
+            if not innumconversion and not instringconversion:
+                varname = tokens[i].value
+                tokens[i].value = getvar(varname)
+                del varname
 
         if inprint: # Printing
                 
@@ -238,7 +262,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 print(tokens[i].value, end="")
 
-        elif inlet: # Defining
+        elif inlet: # Defining variables
             if tokens[i].type == "ENDLET":
                 variables[current_var] = current_value
                 current_var = ""
@@ -252,7 +276,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 current_value = tokens[i].value
         
-        elif ininp:
+        elif ininp: # Inputting
             if tokens[i].type == "ENDINPUT":
                 variables[current_var] = input("")
                 pos = 0
@@ -265,7 +289,7 @@ def interpret(tokens):          # The place where tokens are interpreted
                 print(tokens[i].value, end="")
                 pos += 1
         
-        elif innext:
+        elif innext: # Incrementing by 1
             if tokens[i].type == "ENDNEXT":
                 variables[current_var] += 1
                 current_var = ""
@@ -273,7 +297,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 current_var = tokens[i].value
         
-        elif inprev:
+        elif inprev: # Decrementing by 2
             if tokens[i].type == "ENDPREV":
                 variables[current_var] -= 1
                 current_var = ""
@@ -281,6 +305,33 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 current_var = tokens[i].value
 
+        elif innumconversion: # Convert to NUM
+            if tokens[i].type == "ENDTONUM":
+                variables[target_var] = float(variables[current_var]) if "." in str(current_var) else int(variables[current_var])
+                pos = 0
+                current_var = ""
+                target_var = ""
+                innumconversion = False
+            else:
+                if pos == 0:
+                    current_var = tokens[i].value
+                else:
+                    target_var = tokens[i].value
+                pos += 1
+        
+        elif instringconversion: # Convert to STRING
+            if tokens[i].type == "ENDTOSTRING":
+                variables[target_var] = str(variables[current_var])
+                pos = 0
+                current_var = ""
+                target_var = ""
+                instringconversion = False
+            else:
+                if pos == 0:
+                    current_var = tokens[i].value
+                else:
+                    target_var = tokens[i].value
+                pos += 1
 
         else:    
             if tokens[i].type == "PRINT":
@@ -299,6 +350,10 @@ def interpret(tokens):          # The place where tokens are interpreted
                 innext = True
             elif tokens[i].type == "PREV":
                 inprev = True
+            elif tokens[i].type == "TONUM":
+                innumconversion = True
+            elif tokens[i].type == "TOSTRING":
+                instringconversion = True
 
 def run():
     codefile = open(sys.argv[1]).read()

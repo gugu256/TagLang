@@ -1,0 +1,4 @@
+<input><var>age</var> <string>Enter your age : </string></input>
+<tonum><var>age</var> <var>age</var></tonum>
+<print><var>age</var> <nl> </print>
+<tostring><var>age</var> <var>stringified-age</var></tostring>
