@@ -47,7 +47,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else f"{self.type}:({self.value})" if self.type == "EXPR" else f"{self.type}:{self.value}"
+        return (self.type + ":" + '"' + self.value.replace("\n", "\\n") + '"') if self.type == "STRING" or self.type == "NEWLINE" else (self.type + ":" + '(' + self.value.replace("\n", "\\n") + ')') if self.type == "EXPR" else (self.type + ":`" + self.value.replace("\n", "\\n").replace("\t", "\\t") + "`") if self.type == "PY" else f"{self.type}:{self.value}"
 
 def lex(filecontent, show_tokens, show_token):
     tok = ""
@@ -71,7 +71,7 @@ def lex(filecontent, show_tokens, show_token):
     for char in filecontent:
         tok += char
         print(tok) if show_token == True else print(end="")
-        if tok in " \t\n" and instring == False and incomment == False and inexpr == False:
+        if tok in " \t\n" and instring == False and incomment == False and inexpr == False and inpy == False:
             tok = ""
 
         if tok in TT_PRINT:
@@ -141,7 +141,7 @@ def lex(filecontent, show_tokens, show_token):
             string += tok
             if string[-9:] in TT_ENDSTRING:
                 instring = False
-                string = string[:-9]
+                string = string[:-9].replace("\\n", "\n").replace("\\t", "\t").replace("\\n", "\n").replace("\\r", "\r").replace("\\\\", "\\")
                 tokens.append(Token("STRING", string))
                 string = ""
                 tok = ""
@@ -249,30 +249,33 @@ def lex(filecontent, show_tokens, show_token):
                 inexpr = False
                 expr = expr[:-7]
                 expr = expr.replace("<var>", 'variables["').replace("</var>", '"]').replace("<VAR>", 'variables["').replace("</VAR>", '"]')
+                expr = expr.replace("<string>", "\"").replace("</string>", "\"").replace("<STRING>", "\"").replace("</STRING>", "\"")
+                expr = expr.replace("<num>", "").replace("</num>", "").replace("<NUM>", "").replace("</NUM>", "")
                 tokens.append(Token("EXPR", expr))
                 expr = ""
                 tok = ""
             else:
                 tok = ""
         
-        elif tok in TT_ENDCOMMENT:
-            tokens.append(Token("COMMENT", comment))
-            comment = ""
+        elif tok in TT_ENDPY:
+            tokens.append(Token("PY", pythoncode))
+            pythoncode = ""
             tok = ""
-        elif tok in TT_COMMENT or tok == "<comment>":
-            if incomment != True:
-                incomment = True
+        elif tok in TT_PY:
+            if inpy != True:
+                inpy = True
                 tok = ""
-            elif incomment:
-                comment += tok
+            elif inpy:
+                pythoncode += tok
                 tok = ""
-        elif incomment:
-            comment += tok
-            if comment[-10:] in TT_ENDCOMMENT:
-                incomment = False
-                comment = comment[:-10]
-                tokens.append(Token("COMMENT", comment))
-                comment = ""
+        elif inpy:
+            pythoncode += tok
+            if pythoncode[-5:] in TT_ENDPY:
+                inpy = False
+                pythoncode = pythoncode[:-5]
+                pythoncode = pythoncode.replace("\\n", "\n").replace("\\t", "\t").replace("\\n", "\n").replace("\\r", "\r").replace("\\\\", "\\")
+                tokens.append(Token("PY", pythoncode))
+                pythoncode = ""
                 tok = ""
             else:
                 tok = ""
@@ -296,6 +299,9 @@ def interpret(tokens):          # The place where tokens are interpreted
     instringconversion = False  # Indictaes iof we are converting something to a STRING
     target_var = ""             # The var the conversion will be stored in 
 
+    # The Normal Vars array makes sure we don't add useless variables in the variables dictionary (see how the PY token is interepreted to understand why this is useful)
+    normal_vars = ["normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
+
     for i in range(0, len(tokens)):
 
         # Little explanation for the two next lines, 
@@ -318,7 +324,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             if tokens[i].type == "ENDPRINT":
                 inprint = False
             else:
-                print(tokens[i].value, end="")
+                print(tokens[i].value, end="") if tokens[i].type != "COMMENT" else print(end="")
 
         elif inlet: # Defining variables
             if tokens[i].type == "ENDLET":
@@ -412,6 +418,21 @@ def interpret(tokens):          # The place where tokens are interpreted
                 innumconversion = True
             elif tokens[i].type == "TOSTRING":
                 instringconversion = True
+            elif tokens[i].type == "PY":
+                for key in variables:
+                    locals()[key] = variables[key]
+                del key
+                
+                exec(tokens[i].value)
+                
+                for key in variables:
+                    exec(f"del {key}")
+                del key
+                varz = locals()
+                for key in varz:
+                    if key not in normal_vars:
+                        variables[key] = varz[key]
+                del key
 
 def run():
     codefile = open(sys.argv[1]).read()

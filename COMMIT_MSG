@@ -1,1 +1,37 @@
-Expressions baby!
+py tag!
+variables are synchronized between the TagLang program and the python part
+fixed a bug in expressions (they did not use string and num tags)
+comments are no longer printed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+this is a big commit

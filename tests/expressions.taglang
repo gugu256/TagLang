@@ -1,7 +1,8 @@
 <let>
-    <name>language-name</name> <expr>"tag" + "lang"</expr>
+    <name>language-name</name> <expr><string>Tag</string> + <string>Lang</string></expr>
 </let>
 
 <print>
+    <string>The language's name is : </string>
     <var>language-name</var>
 </print>

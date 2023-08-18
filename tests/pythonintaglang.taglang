@@ -1,0 +1,12 @@
+<let>
+    <name>a_taglang_variable</name> <string>I am a TagLang variable!</string>
+</let>
+
+<py>
+print(f"We got a TagLang variable here : {a_taglang_variable}")
+a_python_variable = input("Enter something : ")
+</py>
+<print>
+    <string>We also got this variable in the TagLang part of the program : </string>
+    <var>a_python_variable</var>
+</print>
