@@ -1,2 +1,1 @@
-QUIT tag
-and END tag which is the same
+IMPORT without the need of specifying a filename in the string format

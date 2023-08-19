@@ -36,9 +36,11 @@ TT_DEL =          ["<del>", "<DEL>"]
 TT_ENDDEL =       ["</del>", "</DEL>"]
 TT_EVAL =         ["<eval>", "<EVAL>"]
 TT_ENDEVAL =      ["</eval>", "</EVAL>"]
-TT_EXE =          ["<exe>", "<EXE>", "<import>", "<IMPORT>"]
+TT_EXE =          ["<exe>", "<EXE>", ]
 TT_ENDEXE =       ["</exe>", "</EXE>", "</import>", "</IMPORT>"]
 TT_QUIT =         ["<quit>", "<QUIT>", "<end>", "<END>"]
+TT_IMPORT =       ["<import>", "<IMPORT>"]
+TT_ENDIMPORT =    ["</import>", "</IMPORT>"]
 
 variables = {
     "_VERSION": 0.0
@@ -73,6 +75,8 @@ def lex(filecontent, show_tokens, show_token):
     expr = ""
     inpy = False
     pythoncode = ""
+    inimport = False
+    package = ""
 
     for char in filecontent:
         tok += char
@@ -304,6 +308,28 @@ def lex(filecontent, show_tokens, show_token):
                 tok = ""
             else:
                 tok = ""
+        
+        elif tok in TT_ENDIMPORT:
+            tokens.append(Token("IMPORT", package))
+            package = ""
+            tok = ""
+        elif tok in TT_IMPORT:
+            if inimport != True:
+                inimport = True
+                tok = ""
+            elif inimport:
+                package += tok
+                tok = ""
+        elif inimport:
+            package += tok
+            if package[-9:] in TT_ENDIMPORT:
+                inimport = False
+                package = package[:-9]
+                tokens.append(Token("IMPORT", package))
+                package = ""
+                tok = ""
+            else:
+                tok = ""
 
         pos += 1
     
@@ -487,6 +513,8 @@ def interpret(tokens):          # The place where tokens are interpreted
                 inexe = True
             elif tokens[i].type == "QUIT":
                 quit()
+            elif tokens[i].type == "IMPORT":
+                interpret(lex(open(tokens[i].value, "r").read(), False, False))
 
 def run():
     codefile = open(sys.argv[1]).read()
