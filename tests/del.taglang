@@ -1,0 +1,3 @@
+<input> <var>name</var> <string>Enter your name : </string> </input>
+<del><var>name</var></del>
+<print><string>Whoops, sorry, I already forgot your name!</string></print>

@@ -33,6 +33,8 @@ TT_EXPR =         ["<expr>", "<EXPR>"]
 TT_ENDEXPR =      ["</expr>", "</EXPR>"]
 TT_PY =           ["<py>", "<PY>"]
 TT_ENDPY =        ["</py>", "</PY>"]
+TT_DEL =          ["<del>", "<DEL>"]
+TT_ENDDEL =       ["</del>", "</DEL>"]
 
 variables = {
     "_VERSION": 0.0
@@ -113,12 +115,17 @@ def lex(filecontent, show_tokens, show_token):
         elif tok in TT_LET:
             tokens.append(Token("LET", None))
             tok = ""
-        elif tok in TT_CLEAR:
-            tokens.append(Token("CLEAR", None))
-            tok = ""
         elif tok in TT_ENDLET:
             tokens.append(Token("ENDLET", None))
             tok = ""
+        elif tok in TT_DEL:
+            tokens.append(Token("DEL", None))
+            tok = ""
+        elif tok in TT_ENDDEL:
+            tokens.append(Token("ENDDEL", None))
+            tok = ""
+        elif tok in TT_CLEAR:
+            tokens.append(Token("CLEAR", None))
         elif tok in TT_INPUT:
             tokens.append(Token("INPUT", None))
             tok = ""
@@ -298,9 +305,10 @@ def interpret(tokens):          # The place where tokens are interpreted
     innumconversion = False     # Indicates if we are converting somehting to a NUM
     instringconversion = False  # Indictaes iof we are converting something to a STRING
     target_var = ""             # The var the conversion will be stored in 
+    indel = False               # Indiciates if we are deleting a variable
 
     # The Normal Vars array makes sure we don't add useless variables in the variables dictionary (see how the PY token is interepreted to understand why this is useful)
-    normal_vars = ["normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
+    normal_vars = ["indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
 
     for i in range(0, len(tokens)):
 
@@ -308,8 +316,8 @@ def interpret(tokens):          # The place where tokens are interpreted
         # The first line makes sure that a variable is not replaced by its value in functions that have the first arg as a variable (example : In INPUT, the first argument has to be a variable, but the next arguments for the prompt might be variables' values)
         # The second line makes sure that a variable is not replaced by its value in functions where every variable is an arg (example: in TONUM, every variiable is an argument, and none of their values are used)
                                   
-        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV" and tokens[i-1].type != "TONUM" and tokens[i-1].type != "TOSTRING": # Replaces variable tokens by their value
-            if not innumconversion and not instringconversion:
+        if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV" and tokens[i-1].type != "TONUM" and tokens[i-1].type != "TOSTRING" and tokens[i].type != "DEL" : # Replaces variable tokens by their value
+            if not innumconversion and not instringconversion and not indel:
                 varname = tokens[i].value
                 tokens[i].value = getvar(varname)
                 del varname
@@ -396,6 +404,12 @@ def interpret(tokens):          # The place where tokens are interpreted
                 else:
                     target_var = tokens[i].value
                 pos += 1
+        
+        elif indel: # Delete variables:
+            if tokens[i].type == "ENDDEL":
+                indel = False
+            else:
+                del variables[tokens[i].value]
 
         else:    
             if tokens[i].type == "PRINT":
@@ -433,6 +447,8 @@ def interpret(tokens):          # The place where tokens are interpreted
                     if key not in normal_vars:
                         variables[key] = varz[key]
                 del key
+            elif tokens[i].type == "DEL":
+                indel = True
 
 def run():
     codefile = open(sys.argv[1]).read()
