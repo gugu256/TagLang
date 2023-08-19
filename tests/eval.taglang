@@ -1,0 +1,4 @@
+<input> <var>code</var> <string>TagLang shell > </string> </input>
+<print><string>-----------</string> <nl> </print>
+<eval>  <var>code</var> </eval>
+<print> <nl> <string>-----------</string> <nl> </print>
