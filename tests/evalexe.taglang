@@ -1,0 +1,5 @@
+<input> <var>code</var> <string>TagLang REPL > </string> </input>
+<eval>  <var>code</var> </eval>
+<print> <nl> </print>
+
+<exe> <string>tests/evalexe.taglang</string> </exe>

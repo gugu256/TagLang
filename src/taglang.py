@@ -37,6 +37,8 @@ TT_DEL =          ["<del>", "<DEL>"]
 TT_ENDDEL =       ["</del>", "</DEL>"]
 TT_EVAL =         ["<eval>", "<EVAL>"]
 TT_ENDEVAL =      ["</eval>", "</EVAL>"]
+TT_EXE =          ["<exe>", "<EXE>", "<import>", "<IMPORT>"]
+TT_ENDEXE =       ["</exe>", "</EXE>", "</import>", "</IMPORT>"]
 
 variables = {
     "_VERSION": 0.0
@@ -131,6 +133,12 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_ENDEVAL:
             tokens.append(Token("ENDEVAL", None))
+            tok = ""
+        elif tok in TT_EXE:
+            tokens.append(Token("EXE", None))
+            tok = ""
+        elif tok in TT_ENDEXE:
+            tokens.append(Token("ENDEXE", None))
             tok = ""
         elif tok in TT_CLEAR:
             tokens.append(Token("CLEAR", None))
@@ -314,10 +322,11 @@ def interpret(tokens):          # The place where tokens are interpreted
     instringconversion = False  # Indictaes iof we are converting something to a STRING
     target_var = ""             # The var the conversion will be stored in 
     indel = False               # Indicates if we are deleting a variable
-    ineval = False              # Indicates if we are evaluating TagLang code
+    ineval = False              # Indicates if we are running TagLang code
+    inexe = False               # Indicates if we are running TagLang code from a file
 
     # The Normal Vars array makes sure we don't add useless variables in the variables dictionary (see how the PY token is interepreted to understand why this is useful)
-    normal_vars = ["ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
+    normal_vars = ["inexe", "ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
 
     for i in range(0, len(tokens)):
 
@@ -420,11 +429,17 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 del variables[tokens[i].value]
         
-        elif ineval: # Evaluate TagLang code
+        elif ineval: # Run TagLang code
             if tokens[i].type == "ENDEVAL":
                 ineval = False
             else:
                 interpret(lex(tokens[i].value, False, False))
+        
+        elif inexe: # Run TagLang code from a file
+            if tokens[i].type == "ENDEXE":
+                inexe = False
+            else:
+                interpret(lex(open(tokens[i].value, "r").read(), False, False))
 
         else:    
             if tokens[i].type == "PRINT":
@@ -466,6 +481,8 @@ def interpret(tokens):          # The place where tokens are interpreted
                 indel = True
             elif tokens[i].type == "EVAL":
                 ineval = True
+            elif tokens[i].type == "EXE":
+                inexe = True
 
 def run():
     codefile = open(sys.argv[1]).read()
