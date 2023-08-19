@@ -1,7 +1,6 @@
 import sys
 import os
 
-
 TT_PRINT =        ["<print>", "<PRINT>"]
 TT_ENDPRINT =     ["</print>", "</PRINT>"]
 TT_NEWLINE =      ["<nl>", "<br>"]
@@ -39,6 +38,7 @@ TT_EVAL =         ["<eval>", "<EVAL>"]
 TT_ENDEVAL =      ["</eval>", "</EVAL>"]
 TT_EXE =          ["<exe>", "<EXE>", "<import>", "<IMPORT>"]
 TT_ENDEXE =       ["</exe>", "</EXE>", "</import>", "</IMPORT>"]
+TT_QUIT =         ["<quit>", "<QUIT>", "<end>", "<END>"]
 
 variables = {
     "_VERSION": 0.0
@@ -142,6 +142,8 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_CLEAR:
             tokens.append(Token("CLEAR", None))
+        elif tok in TT_QUIT:
+            tokens.append(Token("QUIT", None))
         elif tok in TT_INPUT:
             tokens.append(Token("INPUT", None))
             tok = ""
@@ -483,6 +485,8 @@ def interpret(tokens):          # The place where tokens are interpreted
                 ineval = True
             elif tokens[i].type == "EXE":
                 inexe = True
+            elif tokens[i].type == "QUIT":
+                quit()
 
 def run():
     codefile = open(sys.argv[1]).read()
