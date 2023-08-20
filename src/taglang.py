@@ -16,8 +16,8 @@ TT_VAR =          ["<var>", "<VAR>"]
 TT_ENDVAR =       ["</var>", "</VAR>"]
 TT_GETVARS =      ["<getvars>", "<GETVARS>"]
 TT_CLEAR =        ["<clear>", "<CLEAR>"]
-TT_COMMENT =      ["<comment>", "<COMMENT>"]
-TT_ENDCOMMENT =   ["</comment>", "</COMMENT>"]
+TT_COMMENT =      ["<!--"]
+TT_ENDCOMMENT =   ["-->"]
 TT_INPUT =        ["<input>", "<INPUT>"]
 TT_ENDINPUT =     ["</input>", "</INPUT>"]
 TT_NEXT =         ["<next>", "<NEXT>"]
@@ -278,9 +278,9 @@ def lex(filecontent, show_tokens, show_token):
                 tok = ""
         elif incomment:
             comment += tok
-            if comment[-10:] in TT_ENDCOMMENT:
+            if comment[-3:] in TT_ENDCOMMENT:
                 incomment = False
-                comment = comment[:-10]
+                comment = comment[:-3]
                 tokens.append(Token("COMMENT", comment))
                 comment = ""
                 tok = ""
@@ -355,7 +355,7 @@ def lex(filecontent, show_tokens, show_token):
             package += tok
             if package[-9:] in TT_ENDIMPORT:
                 inimport = False
-                package = package[:-9]
+                package = package[:-9].replace(".", "/")
                 tokens.append(Token("IMPORT", package + ".taglang"))
                 package = ""
                 tok = ""

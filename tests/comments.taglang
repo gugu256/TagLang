@@ -1,7 +1,7 @@
-<comment>This is a taglang comment</comment>
+<!-- This is a taglang comment -->
 
-<comment>And this is a Hello World program :</comment>
+<!-- And this is a Hello World program : -->
 <print>
     <string>Hello, World!</string>
-    <comment>(Goodbyde, Mars)</comment>
+    <!-- (Goodbyde, Mars) -->
 </print>
