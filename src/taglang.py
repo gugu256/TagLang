@@ -28,8 +28,8 @@ TT_TONUM =        ["<tonum>", "<TONUM>"]
 TT_ENDTONUM =     ["</tonum>", "</TONUM>"]
 TT_TOSTRING =     ["<tostring>", "<TOSTRING>"]
 TT_ENDTOSTRING =  ["</tostring>", "</TOSTRING>"]
-TT_EXPR =         ["<expr>", "<EXPR>"]
-TT_ENDEXPR =      ["</expr>", "</EXPR>"]
+TT_EXPR =         ["<expr>", "<EXPR>", "<cond>", "<COND>"]
+TT_ENDEXPR =      ["</expr>", "</EXPR>" "</cond>", "</COND>"]
 TT_PY =           ["<py>", "<PY>"]
 TT_ENDPY =        ["</py>", "</PY>"]
 TT_DEL =          ["<del>", "<DEL>"]
@@ -41,6 +41,9 @@ TT_ENDEXE =       ["</exe>", "</EXE>", "</import>", "</IMPORT>"]
 TT_QUIT =         ["<quit>", "<QUIT>", "<end>", "<END>"]
 TT_IMPORT =       ["<import>", "<IMPORT>"]
 TT_ENDIMPORT =    ["</import>", "</IMPORT>"]
+TT_TRUE =         ["<true>", "<TRUE>"]
+TT_FALSE =        ["<false>", "<FALSE>"]
+TT_IF =           []
 
 variables = {
     "_VERSION": 0.0
@@ -146,8 +149,16 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_CLEAR:
             tokens.append(Token("CLEAR", None))
+            tok = ""
         elif tok in TT_QUIT:
             tokens.append(Token("QUIT", None))
+            tok = ""
+        elif tok in TT_TRUE:
+            tokens.append(Token("BOOL", True))
+            tok = ""
+        elif tok in TT_FALSE:
+            tokens.append(Token("BOOL", False))
+            tok = ""
         elif tok in TT_INPUT:
             tokens.append(Token("INPUT", None))
             tok = ""
