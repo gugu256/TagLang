@@ -43,10 +43,17 @@ TT_IMPORT =       ["<import>", "<IMPORT>"]
 TT_ENDIMPORT =    ["</import>", "</IMPORT>"]
 TT_TRUE =         ["<true>", "<TRUE>"]
 TT_FALSE =        ["<false>", "<FALSE>"]
-TT_IF =           []
+TT_SUB =          ["<sub>", "<SUB>"]
+TT_ENDSUB =       ["</sub>", "</SUB>"]
+TT_GOSUB =        ["<gosub>", "<GOSUB>"]
+TT_ENDGOSUB =     ["</gosub>", "</GOSUB>"]
 
 variables = {
     "_VERSION": 0.0
+}
+
+subprocesses = {
+
 }
 
 def getvar(var):
@@ -80,6 +87,8 @@ def lex(filecontent, show_tokens, show_token):
     pythoncode = ""
     inimport = False
     package = ""
+    ingosub = False
+    subname = ""
 
     for char in filecontent:
         tok += char
@@ -128,6 +137,12 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_ENDLET:
             tokens.append(Token("ENDLET", None))
+            tok = ""
+        elif tok in TT_SUB:
+            tokens.append(Token("SUB", None))
+            tok = ""
+        elif tok in TT_ENDSUB:
+            tokens.append(Token("ENDSUB", None))
             tok = ""
         elif tok in TT_DEL:
             tokens.append(Token("DEL", None))
@@ -326,7 +341,7 @@ def lex(filecontent, show_tokens, show_token):
                 tok = ""
         
         elif tok in TT_ENDIMPORT:
-            tokens.append(Token("IMPORT", package))
+            tokens.append(Token("IMPORT", package + ".taglang"))
             package = ""
             tok = ""
         elif tok in TT_IMPORT:
@@ -341,8 +356,30 @@ def lex(filecontent, show_tokens, show_token):
             if package[-9:] in TT_ENDIMPORT:
                 inimport = False
                 package = package[:-9]
-                tokens.append(Token("IMPORT", package))
+                tokens.append(Token("IMPORT", package + ".taglang"))
                 package = ""
+                tok = ""
+            else:
+                tok = ""
+        
+        elif tok in TT_ENDGOSUB:
+            tokens.append(Token("GOSUB", subname))
+            subname = ""
+            tok = ""
+        elif tok in TT_GOSUB:
+            if ingosub != True:
+                ingosub = True
+                tok = ""
+            elif ingosub:
+                package += tok
+                tok = ""
+        elif ingosub:
+            subname += tok
+            if subname[-8:] in TT_ENDGOSUB:
+                ingosub = False
+                subname = subname[:-8]
+                tokens.append(Token("GOSUB", subname))
+                subname = ""
                 tok = ""
             else:
                 tok = ""
@@ -368,9 +405,11 @@ def interpret(tokens):          # The place where tokens are interpreted
     indel = False               # Indicates if we are deleting a variable
     ineval = False              # Indicates if we are running TagLang code
     inexe = False               # Indicates if we are running TagLang code from a file
+    insub = False               # Indicates if we are defining a subprocess
+    subname = ""                # The name of the subprocess we're defining
 
     # The Normal Vars array makes sure we don't add useless variables in the variables dictionary (see how the PY token is interepreted to understand why this is useful)
-    normal_vars = ["inexe", "ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
+    normal_vars = ["subname", "insub", "inexe", "ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
 
     for i in range(0, len(tokens)):
 
@@ -484,6 +523,19 @@ def interpret(tokens):          # The place where tokens are interpreted
                 inexe = False
             else:
                 interpret(lex(open(tokens[i].value, "r").read(), False, False))
+        
+        elif insub: # Define a subprocess
+            if tokens[i].type == "ENDSUB":
+                insub = False
+                subname = ""
+            elif tokens[i].type == "VARNAME":
+                subname = tokens[i].value
+            else:
+                try:
+                    subprocesses[subname].append(tokens[i])
+                except KeyError:
+                    subprocesses[subname] = []
+                    subprocesses[subname].append(tokens[i])
 
         else:    
             if tokens[i].type == "PRINT":
@@ -531,6 +583,10 @@ def interpret(tokens):          # The place where tokens are interpreted
                 quit()
             elif tokens[i].type == "IMPORT":
                 interpret(lex(open(tokens[i].value, "r").read(), False, False))
+            elif tokens[i].type == "SUB":
+                insub = True
+            elif tokens[i].type == "GOSUB":
+                interpret(subprocesses[tokens[i].value])
 
 def run():
     codefile = open(sys.argv[1]).read()

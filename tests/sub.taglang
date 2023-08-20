@@ -1,0 +1,6 @@
+<sub>
+    <name>sayhello</name>
+    <print> <string>Hello, World !</string> </print>
+</sub>
+
+<gosub>sayhello</gosub>
