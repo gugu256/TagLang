@@ -1,1 +1,2 @@
-Booleans !
+" in EXPR strings
+Custom operators (just `and` `not` and `in` but tagified)

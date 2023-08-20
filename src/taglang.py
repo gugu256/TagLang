@@ -289,8 +289,13 @@ def lex(filecontent, show_tokens, show_token):
                 inexpr = False
                 expr = expr[:-7]
                 expr = expr.replace("<var>", 'variables["').replace("</var>", '"]').replace("<VAR>", 'variables["').replace("</VAR>", '"]')
+                expr = expr.replace("\"", '\\"')
                 expr = expr.replace("<string>", "\"").replace("</string>", "\"").replace("<STRING>", "\"").replace("</STRING>", "\"")
                 expr = expr.replace("<num>", "").replace("</num>", "").replace("<NUM>", "").replace("</NUM>", "")
+                expr = expr.replace("<in>", "in").replace("<IN>", "in")
+                expr = expr.replace("<and>", "and").replace("<AND>", "and")
+                expr = expr.replace("<not>", "not").replace("<NOT>", "not")
+                expr = expr.replace("<is>", "is").replace("<IS>", "is")
                 tokens.append(Token("EXPR", expr))
                 expr = ""
                 tok = ""
