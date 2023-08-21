@@ -1,0 +1,5 @@
+<if> <expr><num>0.10</num> == <num>0.2</num></expr> 
+    <print><string>This condition is true</string></print>
+<else>
+    <print><string>This condition is false</string></print>
+</if>

@@ -47,9 +47,13 @@ TT_SUB =          ["<sub>", "<SUB>"]
 TT_ENDSUB =       ["</sub>", "</SUB>"]
 TT_GOSUB =        ["<gosub>", "<GOSUB>"]
 TT_ENDGOSUB =     ["</gosub>", "</GOSUB>"]
+TT_IF =           ["<if>", "<IF>"]
+TT_ENDIF =        ["</if>", "</IF>"]
+TT_ELSE =         ["<else>", "<ELSE>"]
 
 variables = {
-    "_VERSION": 0.0
+    "_VERSION": 0.0, 
+    "_LAST_IF": False
 }
 
 subprocesses = {
@@ -137,6 +141,17 @@ def lex(filecontent, show_tokens, show_token):
             tok = ""
         elif tok in TT_ENDLET:
             tokens.append(Token("ENDLET", None))
+            tok = ""
+        elif tok in TT_IF:
+            tokens.append(Token("IF", None))
+            tok = ""
+        elif tok in TT_ENDIF:
+            tokens.append(Token("ENDIF", None))
+            tok = ""
+        elif tok in TT_ELSE:
+            tokens.append(Token("ENDIF", None))
+            tokens.append(Token("IF", None))
+            tokens.append(Token("EXPR", "variables['_LAST_IF'] == False"))
             tok = ""
         elif tok in TT_SUB:
             tokens.append(Token("SUB", None))
@@ -303,14 +318,16 @@ def lex(filecontent, show_tokens, show_token):
             if expr[-7:] in TT_ENDEXPR:
                 inexpr = False
                 expr = expr[:-7]
-                expr = expr.replace("<var>", 'variables["').replace("</var>", '"]').replace("<VAR>", 'variables["').replace("</VAR>", '"]')
                 expr = expr.replace("\"", '\\"')
+                expr = expr.replace("<var>", 'variables["').replace("</var>", '"]').replace("<VAR>", 'variables["').replace("</VAR>", '"]')
                 expr = expr.replace("<string>", "\"").replace("</string>", "\"").replace("<STRING>", "\"").replace("</STRING>", "\"")
                 expr = expr.replace("<num>", "").replace("</num>", "").replace("<NUM>", "").replace("</NUM>", "")
                 expr = expr.replace("<in>", "in").replace("<IN>", "in")
                 expr = expr.replace("<and>", "and").replace("<AND>", "and")
                 expr = expr.replace("<not>", "not").replace("<NOT>", "not")
                 expr = expr.replace("<is>", "is").replace("<IS>", "is")
+                expr = expr.replace("<true>", "True").replace("<TRUE>", "True")
+                expr = expr.replace("<false>", "False").replace("<FALSE>", "False")
                 tokens.append(Token("EXPR", expr))
                 expr = ""
                 tok = ""
@@ -407,18 +424,25 @@ def interpret(tokens):          # The place where tokens are interpreted
     inexe = False               # Indicates if we are running TagLang code from a file
     insub = False               # Indicates if we are defining a subprocess
     subname = ""                # The name of the subprocess we're defining
+    inif = False                # Indictaes if we are in a condition
+    condition = None            # The condition the if statement must follow
 
     # The Normal Vars array makes sure we don't add useless variables in the variables dictionary (see how the PY token is interepreted to understand why this is useful)
-    normal_vars = ["subname", "insub", "inexe", "ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
+    normal_vars = ["condition", "inif", "subname", "insub", "inexe", "ineval", "indel", "normal_vars", "i", "pos", "tokens", "inprint", "inlet", "current_var", "current_value", "pos", "ininp", "innext", "inprev", "innumconversion", "instringconversion", "target_var"]
 
     for i in range(0, len(tokens)):
 
-        # Little explanation for the two next lines, 
+        if condition == True:
+            if tokens[i].type == "ENDIF":
+                pos = 0
+                condition = None
+
+        # Little explanation for the next two lines, 
         # The first line makes sure that a variable is not replaced by its value in functions that have the first arg as a variable (example : In INPUT, the first argument has to be a variable, but the next arguments for the prompt might be variables' values)
         # The second line makes sure that a variable is not replaced by its value in functions where every variable is an arg (example: in TONUM, every variiable is an argument, and none of their values are used)
                                   
         if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV" and tokens[i-1].type != "TONUM" and tokens[i-1].type != "TOSTRING" and tokens[i].type != "DEL" : # Replaces variable tokens by their value
-            if not innumconversion and not instringconversion and not indel:
+            if not innumconversion and not instringconversion and not indel and condition:
                 varname = tokens[i].value
                 tokens[i].value = getvar(varname)
                 del varname
@@ -427,8 +451,16 @@ def interpret(tokens):          # The place where tokens are interpreted
             expr = tokens[i].value
             tokens[i].value = eval(expr)
             del expr
+        
 
-        if inprint: # Printing
+        if condition == False:
+            if tokens[i].type == "ENDIF":
+                pos = 0
+                condition = None
+            else:
+                pass
+
+        elif inprint: # Printing
                 
             if tokens[i].type == "ENDPRINT":
                 inprint = False
@@ -470,7 +502,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 current_var = tokens[i].value
         
-        elif inprev: # Decrementing by 2
+        elif inprev: # Decrementing by 1
             if tokens[i].type == "ENDPREV":
                 variables[current_var] -= 1
                 current_var = ""
@@ -524,6 +556,7 @@ def interpret(tokens):          # The place where tokens are interpreted
             else:
                 interpret(lex(open(tokens[i].value, "r").read(), False, False))
         
+        
         elif insub: # Define a subprocess
             if tokens[i].type == "ENDSUB":
                 insub = False
@@ -536,6 +569,11 @@ def interpret(tokens):          # The place where tokens are interpreted
                 except KeyError:
                     subprocesses[subname] = []
                     subprocesses[subname].append(tokens[i])
+
+        elif inif: # Conditions
+            condition = tokens[i].value
+            variables["_LAST_IF"] = condition
+            inif = False
 
         else:    
             if tokens[i].type == "PRINT":
@@ -587,6 +625,8 @@ def interpret(tokens):          # The place where tokens are interpreted
                 insub = True
             elif tokens[i].type == "GOSUB":
                 interpret(subprocesses[tokens[i].value])
+            elif tokens[i].type == "IF":
+                inif = True
 
 def run():
     codefile = open(sys.argv[1]).read()
