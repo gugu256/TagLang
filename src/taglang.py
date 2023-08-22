@@ -408,6 +408,7 @@ def lex(filecontent, show_tokens, show_token):
     return tokens
 
 def interpret(tokens):          # The place where tokens are interpreted
+    global variables
     inprint = False             # Indicates if we are printing stuff 
     inlet = False               # Indicates if we are defining variables 
     current_var = ""            # The name of the variable we're defining
@@ -604,9 +605,10 @@ def interpret(tokens):          # The place where tokens are interpreted
                 
                 exec(tokens[i].value)
                 
-                for key in variables:
-                    exec(f"del {key}")
-                del key
+
+
+                variables = {}
+
                 varz = locals()
                 for key in varz:
                     if key not in normal_vars:

@@ -4,9 +4,11 @@
 
 <py>
 print(f"We got a TagLang variable here : {a_taglang_variable}")
+a_taglang_variable = "sdfjgklhfdg"
 a_python_variable = input("Enter something : ")
 </py>
 <print>
     <string>We also got this variable in the TagLang part of the program : </string>
-    <var>a_python_variable</var>
+    <var>a_python_variable</var> <nl>
+    <var>a_taglang_variable</var>
 </print>

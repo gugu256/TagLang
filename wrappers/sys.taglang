@@ -1,0 +1,12 @@
+<let>
+    <name>sys_argv_index</name> <num>1</num>
+    <name>sys_argv</name> <string></string>
+</let>
+
+<sub>
+    <name>sys_get_argv</name>
+    <py>
+import sys
+sys_argv = sys.argv[sys_argv_index]
+    </py>
+</sub>
