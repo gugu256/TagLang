@@ -1,0 +1,44 @@
+<!-- 
+
+    LEARN TAGLANG
+
+-->
+
+<!-- This is a TagLang comment -->
+
+
+<!-- You can print to the standard ouput using the <print> tag-->
+<print> 
+    <string>Hello, World</string> <!-- Indentation and new lines don't matter, so you could write this whole Hello World program on one line -->
+    <nl> <!-- This line is used to print new lines, bu tyou can still use \n in strings if you want -->
+</print>
+
+<!-- You can declare variables using the <let> tag -->
+
+<let>
+    <name>language_name</name> <string>TagLang</string> <!-- You need to use the <name> tag to specify the name of the values, but in any other statement, you can use the <var> tag to declare/acess variables-->
+    <name>version</name> <num>0.1</num> <!-- As you can see, you can declare multiple variables in a single <let> tag -->
+</let>
+
+<!-- To access variables in other statements, you need the <var> tag-->
+
+<print>
+    <string>The language's name is </string>
+    <var>language_name</var>
+    <nl>
+
+    <!-- In a print statement, every argument is always concatenated automatically wihtout the need for a + -->
+</print>
+
+<!-- You can get user input with the <input> tag -->
+
+<input><var>name</var> <string>Enter your name : </string> </input>
+<input><var>fullname</var> <string>Enter your full name, </string> <var>name</var> <string> : </string></input>
+<input><var>age</var> <string>Enter your age : </string></input>
+
+<!-- As you can see, even though we are creating new variables (name, fullname and age), we don't need to use the <let> and <name> keyword -->
+
+<!-- Conversion from string to numbers and numbers to strings -->
+
+<tonum><var>num_age</var> <var>age</var></tonum> <!-- Will convert the age variable to a number and put the result in the num_age variable. If you want, you can convert a varibale to anotehr type and put the result ion teh same variable, that'll work -->
+

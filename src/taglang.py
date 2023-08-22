@@ -281,7 +281,7 @@ def lex(filecontent, show_tokens, show_token):
                 tok = ""
         
         elif tok in TT_ENDCOMMENT:
-            tokens.append(Token("COMMENT", comment))
+            #tokens.append(Token("COMMENT", None))
             comment = ""
             tok = ""
         elif tok in TT_COMMENT or tok == "<comment>":
@@ -296,7 +296,7 @@ def lex(filecontent, show_tokens, show_token):
             if comment[-3:] in TT_ENDCOMMENT:
                 incomment = False
                 comment = comment[:-3]
-                tokens.append(Token("COMMENT", comment))
+                #tokens.append(Token("COMMENT", None))
                 comment = ""
                 tok = ""
             else:
@@ -442,7 +442,8 @@ def interpret(tokens):          # The place where tokens are interpreted
         # The second line makes sure that a variable is not replaced by its value in functions where every variable is an arg (example: in TONUM, every variiable is an argument, and none of their values are used)
                                   
         if tokens[i].type == "VAR" and tokens[i-1].type != "INPUT" and tokens[i-1].type != "NEXT" and tokens[i-1].type != "PREV" and tokens[i-1].type != "TONUM" and tokens[i-1].type != "TOSTRING" and tokens[i].type != "DEL" : # Replaces variable tokens by their value
-            if not innumconversion and not instringconversion and not indel and condition:
+            
+            if not innumconversion and not instringconversion and not indel and condition != False:
                 varname = tokens[i].value
                 tokens[i].value = getvar(varname)
                 del varname
