@@ -1,0 +1,19 @@
+<!-- Wrapper for the os python module -->
+
+<let>
+    <name>os_system_command</name> <string></string>
+    <name>os_name</name> <string></string>
+</let>
+
+<py>
+import os
+os_name = os.name
+</py>
+
+<sub>
+    <name>os_system</name>
+    <py>
+import os
+os.system(os_system_command)
+    </py>
+</sub>
