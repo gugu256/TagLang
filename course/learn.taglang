@@ -38,7 +38,35 @@
 
 <!-- As you can see, even though we are creating new variables (name, fullname and age), we don't need to use the <let> and <name> keyword -->
 
+
 <!-- Conversion from string to numbers and numbers to strings -->
+    
+    <tonum><var>num_age</var> <var>age</var></tonum> <!-- Will convert the age variable to a number and store the result in the num_age variable. If you want, you can convert a varibale to another type and store the result in the same variable, that'll work -->
+    <tostring><var>string_age</var> <var>num_age</var></tostring> <!-- Will convert the num_age variable back to a string and store the result in the string_age variable-->
 
-<tonum><var>num_age</var> <var>age</var></tonum> <!-- Will convert the age variable to a number and put the result in the num_age variable. If you want, you can convert a varibale to anotehr type and put the result ion teh same variable, that'll work -->
+<!-- Mathematical expressions -->
 
+<!-- Any mathematical expression has to be contained in an <expr> tag -->
+
+<print><expr>2+2</expr> <nl> </print> <!-- Will print 4 to the standard output -->
+
+<print><string>The next TagLang version will be version v</string> <expr><var>_VERSION</var> + 1</expr> <nl></print> <!-- Will print the number of the next TagLang's version, in this situation, we coud've also put the string ionside the expression, it would've worked -->
+
+
+<!-- Modifying the values of variables -->
+
+<!-- To modify the value of a variable, we need to use the <let> tag again. Remember this name variable we declared about 20 lines earlier? We're gonna do something funny with it -->
+
+<let>
+    <name>name</name> <expr><var>name</var> + <string> Ramsay</string></expr>
+</let>
+
+<print>
+    <string>This would be your name if you were the child of Gordon Ramsay : </string> <var>name</var>
+    <nl>
+</print>
+
+<!-- Now let's say you are coding a program (probably the best program ever, by the way) and you want to increment or decrement a variable by just 1, and you don't wanna write a whole <let> tag for it, well we got you!  just use the <next> and <prev> tags-->
+
+<next><var>age</var></next> <!-- Will increment the age variable by 1 -->
+<prev><var>_VERSION</var></prev> <!-- Will decrement the _VERSION variable by 1 (fun fact : if you do so, the TagLang interpreter willl switch from TagLAng 1.0 to TagLang 0.1) (fun fact 2 : not it won't) -->

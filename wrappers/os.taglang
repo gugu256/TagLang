@@ -3,6 +3,7 @@
 <let>
     <name>os_system_command</name> <string></string>
     <name>os_name</name> <string></string>
+    <name>os_cwd</name> <string></string>
 </let>
 
 <py>
@@ -12,8 +13,20 @@ os_name = os.name
 
 <sub>
     <name>os_system</name>
-    <py>
+
+<py>
 import os
 os.system(os_system_command)
-    </py>
+</py>
+
+</sub>
+
+<sub>
+    <name>os_getcwd</name>
+
+<py>
+import os
+os_cwd = os.getcwd()
+</py> 
+
 </sub>

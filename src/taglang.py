@@ -514,6 +514,7 @@ def interpret(tokens):          # The place where tokens are interpreted
 
         elif innumconversion: # Convert to NUM
             if tokens[i].type == "ENDTONUM":
+                variables[target_var] = 0
                 variables[target_var] = float(variables[current_var]) if "." in str(current_var) else int(variables[current_var])
                 pos = 0
                 current_var = ""
@@ -521,13 +522,14 @@ def interpret(tokens):          # The place where tokens are interpreted
                 innumconversion = False
             else:
                 if pos == 0:
-                    current_var = tokens[i].value
-                else:
                     target_var = tokens[i].value
+                else:
+                    current_var = tokens[i].value
                 pos += 1
         
         elif instringconversion: # Convert to STRING
             if tokens[i].type == "ENDTOSTRING":
+                variables[target_var] = ""
                 variables[target_var] = str(variables[current_var])
                 pos = 0
                 current_var = ""
@@ -535,9 +537,9 @@ def interpret(tokens):          # The place where tokens are interpreted
                 instringconversion = False
             else:
                 if pos == 0:
-                    current_var = tokens[i].value
-                else:
                     target_var = tokens[i].value
+                else:
+                    current_var = tokens[i].value
                 pos += 1
         
         elif indel: # Delete variables:
